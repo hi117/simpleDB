@@ -103,8 +103,8 @@ class DB:
         # close them both and replace the old with the temp
         tempDB.close()
         self.close()
-        #remove(name)
-        rename(name + '.tmp', name)
+        remove(name)
+        rename(name + '.temp', name)
         self.open(name)
 
     def genGaps(self):
