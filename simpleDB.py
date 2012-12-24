@@ -71,6 +71,20 @@ class DB:
         self.file.seek(self.dict[key][0])
         self.file.write(value)
 
+    def remove(self, key):
+        '''
+        This function removes a key from the database.
+        A remove function simply removes it from the dict and the gaps.
+        '''
+        index = self.dict[key][0]
+        self.dict.pop(key)
+        i = None
+        for n, gap in enumerate(self.gaps):
+            if gap[0] == index:
+                i = n
+                break
+        self.gaps.pop(i)
+
     def genGaps(self):
         '''
         Generates a gap tracking datastructre on load.

@@ -20,6 +20,11 @@ print('testing reading...')
 print(db.read(b'hello'))
 print(db.read(b'foo'))
 
+# add and remove
+print('testing remove...')
+db.remove(b'hello')
+db.write(b'bla', b'bla')
+
 #close
 print('testing closing...')
 db.close()
@@ -30,7 +35,7 @@ db.open('test.db')
 
 # read old values
 print('testing re-reading...')
-print(db.read(b'hello'))
+print(db.read(b'bla'))
 print(db.read(b'foo'))
 
 # write a new value
@@ -41,7 +46,7 @@ input()
 
 # read all the values to check
 print('final read test...')
-print(db.read(b'hello'))
+print(db.read(b'bla'))
 print(db.read(b'foo'))
 print(db.read(b'tachi'))
 
