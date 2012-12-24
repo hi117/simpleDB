@@ -42,45 +42,57 @@ class DB:
         '''
         Reads a value from the database.
         '''
-        self.file.seek(self.dict[key][0])
-        return self.file.read(self.dict[key][1])
+        try:
+            self.file.seek(self.dict[key][0])
+            return self.file.read(self.dict[key][1])
+        except Exception as e:
+            self.dumpDict()
+            raise e
 
     def write(self, key, value):
         '''
         Sets the key to the value.
         '''
-        if key in self.dict:
-            if len(value) < self.dict[key][1]:
-                self.dict[key][1] = len(value)
-                self.file.seek(self.dict[key][0])
-                self.file.write(value)
-                return
+        try:
+            if key in self.dict:
+                if len(value) < self.dict[key][1]:
+                    self.dict[key][1] = len(value)
+                    self.file.seek(self.dict[key][0])
+                    self.file.write(value)
+                    return
 
-        # find a starting index and save it to the dict
-        index = self.findGap(value)
-        self.dict[key] = [index, len(value)]
+            # find a starting index and save it to the dict
+            index = self.findGap(value)
+            self.dict[key] = [index, len(value)]
         
-        # write the dict
-        self.file.seek(self.findDictGap())
-        self.file.write(magic + pickle.dumps(self.dict))
+            # write the dict
+            self.file.seek(self.findDictGap())
+            self.file.write(magic + pickle.dumps(self.dict))
 
-        # write the value
-        self.file.seek(self.dict[key][0])
-        self.file.write(value)
+            # write the value
+            self.file.seek(self.dict[key][0])
+            self.file.write(value)
+        except Exception as e:
+            self.dumpDict()
+            raise e
 
     def remove(self, key):
         '''
         This function removes a key from the database.
         A remove function simply removes it from the dict and the gaps.
         '''
-        index = self.dict[key][0]
-        self.dict.pop(key)
-        i = None
-        for n, gap in enumerate(self.gaps):
-            if gap[0] == index:
-                i = n
-                break
-        self.gaps.pop(i)
+        try:
+            index = self.dict[key][0]
+            self.dict.pop(key)
+            i = None
+            for n, gap in enumerate(self.gaps):
+                if gap[0] == index:
+                    i = n
+                    break
+            self.gaps.pop(i)
+        except Exception as e:
+            self.dumpDict()
+            raise e
 
     def defrag(self):
         '''
@@ -88,24 +100,34 @@ class DB:
         A defrag is just a copy to a temporary where the temporary eventually 
         replaces the current database.
         '''
-        # create the temporary database
-        name = self.file.name
-        if exists(name + '.temp'):
-            print('Error defragging, previous defrag interrupted.')
-            return False
-        tempDB = DB()
-        tempDB.open(name + '.temp')
+        try:
+            # create the temporary database
+            name = self.file.name
+            if exists(name + '.temp'):
+                print('Error defragging, previous defrag interrupted.')
+                return False
+            tempDB = DB()
+            tempDB.open(name + '.temp')
 
-        # clone the current databast
-        for key in self.dict.keys():
-            tempDB.write(key, self.read(key))
+            # clone the current databast
+            for key in self.dict.keys():
+                tempDB.write(key, self.read(key))
 
-        # close them both and replace the old with the temp
-        tempDB.close()
-        self.close()
-        remove(name)
-        rename(name + '.temp', name)
-        self.open(name)
+            # close them both and replace the old with the temp
+            tempDB.close()
+            self.close()
+            remove(name)
+            rename(name + '.temp', name)
+            self.open(name)
+        except Exception as e:
+            self.dumpDict()
+            raise e
+
+    def dumpDict(self, path = None):
+        if path == None:
+            path = self.file.name + '.dump'
+        with open(path, 'wb') as dump:
+            pickle.dump(self.dict, dump)
 
     def genGaps(self):
         '''
@@ -163,5 +185,9 @@ class DB:
         return self.gaps[-1][0] + self.gaps[-1][1]
 
     def close(self):
-        self.file.close()
-        self.dict = None
+        try:
+            self.file.close()
+            self.dict = None
+        except Exception as e:
+            self.dumpDict()
+            raise e
