@@ -1,5 +1,6 @@
 import pickle
 from os.path import exists
+from os import rename, remove
 
 magic = b'\xc8\xbc\x16\xdc'
 
@@ -63,10 +64,6 @@ class DB:
         self.file.seek(self.findDictGap())
         self.file.write(magic + pickle.dumps(self.dict))
 
-        print('pausing...')
-        print(self.gaps)
-        input()
-
         # write the value
         self.file.seek(self.dict[key][0])
         self.file.write(value)
@@ -84,6 +81,31 @@ class DB:
                 i = n
                 break
         self.gaps.pop(i)
+
+    def defrag(self):
+        '''
+        This function defrags the open database.
+        A defrag is just a copy to a temporary where the temporary eventually 
+        replaces the current database.
+        '''
+        # create the temporary database
+        name = self.file.name
+        if exists(name + '.temp'):
+            print('Error defragging, previous defrag interrupted.')
+            return False
+        tempDB = DB()
+        tempDB.open(name + '.temp')
+
+        # clone the current databast
+        for key in self.dict.keys():
+            tempDB.write(key, self.read(key))
+
+        # close them both and replace the old with the temp
+        tempDB.close()
+        self.close()
+        #remove(name)
+        rename(name + '.tmp', name)
+        self.open(name)
 
     def genGaps(self):
         '''

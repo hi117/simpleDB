@@ -4,6 +4,8 @@ from os import remove
 
 if exists('test.db'):
     remove('test.db')
+if exists('test.db.temp'):
+    remove('test.db.temp')
 
 # open new db
 print('testing opening...')
@@ -42,15 +44,15 @@ print(db.read(b'foo'))
 print('testing new writing...')
 db.write(b'tachi',b'bana')
 
-input()
+# defrag
+print('testing defrag...')
+db.defrag()
 
 # read all the values to check
 print('final read test...')
 print(db.read(b'bla'))
 print(db.read(b'foo'))
 print(db.read(b'tachi'))
-
-input()
 
 # close the db
 print('final close...')
