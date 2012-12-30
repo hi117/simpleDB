@@ -69,6 +69,9 @@ class DB:
             self.file.seek(self.findDictGap())
             self.file.write(magic + pickle.dumps(self.dict))
 
+            # truncate the file to the cursor
+            self.file.truncate()
+
             # write the value
             self.file.seek(self.dict[key][0])
             self.file.write(value)
@@ -90,6 +93,10 @@ class DB:
                     i = n
                     break
             self.gaps.pop(i)
+            # write the new dict and trunc
+            self.file.seek(self.findDictGap())
+            self.file.write(magic + pickle.dumps(self.dict))
+            self.file.truncate()
         except Exception as e:
             self.dumpDict()
             raise e
