@@ -38,7 +38,7 @@ class DB:
         self.genGaps()
         print(self.dict)
 
-    def read(self, key):
+    def get(self, key):
         '''
         Reads a value from the database.
         '''
@@ -49,7 +49,7 @@ class DB:
             self.dumpDict()
             raise e
 
-    def write(self, key, value):
+    def set(self, key, value):
         '''
         Sets the key to the value.
         '''
@@ -130,6 +130,12 @@ class DB:
             self.dumpDict()
             raise e
 
+    def check(self, item):
+        '''
+        Returns true if item is in the database, false otherwise.
+        '''
+        return item in self.dict
+
     def dumpDict(self, path = None):
         if path == None:
             path = self.file.name + '.dump'
@@ -198,3 +204,18 @@ class DB:
         except Exception as e:
             self.dumpDict()
             raise e
+
+    def __len__(self):
+        return len(self.dict)
+    
+    def __getitem__(self, key):
+        return self.get(key)
+
+    def __setitem__(self, key, value):
+        self.set(key, value)
+
+    def __delitem__(self, key):
+        self.remove(key)
+
+    def __contains__(self, item):
+        self.check(item)
