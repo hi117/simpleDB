@@ -1,59 +1,67 @@
 from simpleDB import *
-from os.path import exists
+from os.path import exists, isdir, isfile
+from shutil import rmtree
 from os import remove
 
-if exists('test.db'):
-    remove('test.db')
-if exists('test.db.temp'):
-    remove('test.db.temp')
+types = ['stdFile', 'dirDB']
 
-# open new db
-print('testing opening...')
-db = DB()
-db.open('test.db')
+for i in types:
+    print('Testing: ' + i)
 
-# write some values
-print('testing writing...')
-db.write(b'hello', b'world')
-db.write(b'foo', b'bar')
+    if exists('test.db'):
+        if isfile('test.db'): remove('test.db')
+        elif isdir('test.db'): rmtree('test.db')
+    if exists('test.db.temp'):
+        if isfile('test.db.temp'): remove('test.db.temp')
+        elif isdir('test.db.temp'): remove('test.db.temp')
 
-# read some
-print('testing reading...')
-print(db.read(b'hello'))
-print(db.read(b'foo'))
+    # open new db
+    print('testing opening...')
+    db = DB()
+    db.open('test.db', i)
 
-# add and remove
-print('testing remove...')
-db.remove(b'hello')
-db.write(b'bla', b'bla')
+    # set some values
+    print('testing writing...')
+    db.set(b'hello', b'world')
+    db.set(b'foo', b'bar')
 
-#close
-print('testing closing...')
-db.close()
+    # get some
+    print('testing geting...')
+    print(db.get(b'hello'))
+    print(db.get(b'foo'))
 
-# open an existing database
-print('testing re-opening...')
-db.open('test.db')
+    # add and remove
+    print('testing remove...')
+    db.remove(b'hello')
+    db.set(b'bla', b'bla')
 
-# read old values
-print('testing re-reading...')
-print(db.read(b'bla'))
-print(db.read(b'foo'))
+    #close
+    print('testing closing...')
+    db.close()
 
-# write a new value
-print('testing new writing...')
-db.write(b'tachi',b'bana')
+    # open an existing database
+    print('testing re-opening...')
+    db.open('test.db', i)
 
-# defrag
-print('testing defrag...')
-db.defrag()
+    # get old values
+    print('testing re-geting...')
+    print(db.get(b'bla'))
+    print(db.get(b'foo'))
 
-# read all the values to check
-print('final read test...')
-print(db.read(b'bla'))
-print(db.read(b'foo'))
-print(db.read(b'tachi'))
+    # set a new value
+    print('testing new writing...')
+    db.set(b'tachi',b'bana')
 
-# close the db
-print('final close...')
-db.close()
+    # defrag
+    print('testing defrag...')
+    db.defrag()
+
+    # get all the values to check
+    print('final get test...')
+    print(db.get(b'bla'))
+    print(db.get(b'foo'))
+    print(db.get(b'tachi'))
+
+    # close the db
+    print('final close...')
+    db.close()

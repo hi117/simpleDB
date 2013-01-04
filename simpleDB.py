@@ -4,14 +4,16 @@ from os import rename, remove
 import simpleDBBackends
 
 class DB:
-    def open(self, path):
+    def open(self, path, Type = None):
         '''
         Opens a database.
         '''
-        # first search for the database type
-        self.DB = simpleDBBackends.getDB(path)
+        if not type:
+            # first search for the database type
+            self.DB = simpleDBBackends.getDB(path)
+        else:
+            self.DB = simpleDBBackends.getDBFromType(Type)
         self.DB.open(path)
-
 
     def get(self, key):
         '''

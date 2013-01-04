@@ -8,11 +8,16 @@ if the path given is an implementation of the given database type.
 
 import pickle
 from os.path import exists, isdir, isfile
-from os import rename, remove
+from os import rename, remove, listdir, mkdir
 import types
 import inspect
+import base64
 
 class stdFile:
+    '''
+    A single file database consisting of values with a key lookup dictionary
+    at the end marked by a magic number.
+    '''
 
     magic = b'\xc8\xbc\x16\xdc'
     dict = None
@@ -239,6 +244,95 @@ class stdFile:
     def __len__(self):
         return len(self.dict)
 
+class dirDB:
+    '''
+    A filesystem database consisting of a root directory with the lookup 
+    dictionary in it named dict and values stored in subdirectories named
+    the hex value for the first byte of the key.  to protect the filesystem,
+    all values will be base64 encoded.
+    '''
+
+    root = None
+    dict = None
+
+    def open(self, path):
+        if not exists(path):
+            mkdir(path)
+        if not exists(path + '/dict'):
+            with open(path + '/dict', 'wb') as f:
+                pickle.dump({}, f)
+
+        self.root = path
+        self.dict = pickle.load(open(path + '/dict', "rb"))
+
+    def get(self, key):
+        if key in self.dict:
+            value = self.calcPath(key)
+            if exists(value):
+                if isfile(value):
+                    with open(value, "rb") as f:
+                        r = f.read()
+                    return r
+    
+    def set(self, key, value):
+        p = self.calcPath(key)
+        if not exists(p):
+            if not exists(self.root + '/' + hex(key[0])[2:]):
+                    mkdir(self.root + '/' + hex(key[0])[2:])
+            with open(p, "wb") as f:
+                f.write(value)
+        self.dict[key] = None
+        self.writeDict()
+
+    def remove(self, key):
+        if key in self.dict:
+            self.dict.pop(key)
+        else:
+            return
+        value = self.calcPath(key)
+        if exists(value):
+            if isfile(value):
+                remove(value)
+        self.writeDict()
+
+    def defrag(self):
+        pass
+
+    def check(self, item):
+        return item in self.dict
+
+    def dumpDict(self, path = None):
+        if path:
+            pickle.dumps(self.dict, path)
+        else:
+            pickle.dumps(self.dict, self.root + '/dict.dump')
+
+    def close(self):
+        root = None
+        dict = None
+    
+    def checkType(self, path):
+        if exists(path):
+            if isdir(path):
+                if exists(path + '/dict'):
+                    if isfile(path + '/dict'):
+                        try:
+                            pickle.load(path + '/dict')
+                            return True
+                        except:
+                            pass
+        return False
+
+    def calcPath(self, key):
+        return self.root + '/' + hex(key[0])[2:] + '/' + str(base64.b64encode(key), "utf8")
+
+    def writeDict(self):
+        with open(self.root + '/dict', 'wb')  as f:
+            pickle.dump(self.dict, f)
+    
+    def __len__(self):
+        return len(self.dict)
+
 def getDB(path):
     '''
     This function take a path and loops over all modules until one returns true for the path.
@@ -248,6 +342,11 @@ def getDB(path):
         if i.checkType(path):
             return i
     return None
+
+def getDBFromType(Type):
+    for i in modules:
+        if i.__qualname__ == Type:
+            return i
 
 '''
 start the generation of the modules list used by getDB
